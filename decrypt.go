@@ -1,7 +1,6 @@
 package railscookie
 
 import (
-	"fmt"
 	s "strings"
 	p "golang.org/x/crypto/pbkdf2"
 	"crypto/sha1"
@@ -46,14 +45,15 @@ func checkCookieValid(cookie *http.Cookie) (err error){
 	return nil
 }
 
-func DecryptAndVerify(cookie *http.Cookie, secret_key_base []byte) {
-	err := checkCookieValid(cookie)
-	if err != nil {return}
-	message, err := getEncCookie(cookie.Value)
-	if err != nil {return}
-	secret := p.Key(secret_key_base, []byte(salt), 1000, 32, sha1.New) 
-	ctx, err := openssl.NewGCMDecryptionCipherCtx(len(secret)*8, nil, secret, message.iv)
-	if err!= nil {return}
-
-	data, err := ctx.DecryptUpdate(message.body)
-	fmt.Println(string(data))}
+func DecryptAndVerify(cookie *http.Cookie, secret_key_base []byte) (raw_cookie []byte, err error) {
+	uh_oh := checkCookieValid(cookie)
+	if uh_oh != nil {return nil, uh_oh}
+	message, uh_oh := getEncCookie(cookie.Value)
+	if uh_oh != nil {return nil, uh_oh}
+	secret := p.Key(secret_key_base, []byte(salt), 1000, 32, sha1.New)
+	ctx, uh_oh := openssl.NewGCMDecryptionCipherCtx(len(secret)*8, nil, secret, message.iv)
+	if uh_oh!= nil {return nil, uh_oh}
+	data, uh_oh := ctx.DecryptUpdate(message.body)
+	if uh_oh!= nil {return nil, uh_oh}
+	return data, nil
+}
