@@ -11,14 +11,14 @@ import (
 	"encoding/base64"
 )
 
-type enc_cookie struct {
+type EncCookie struct {
 	body []byte
 	iv []byte
 	auth_tag []byte
 }
 
-func get_enc_cookie(raw string) (ec enc_cookie, err error){
-	var q enc_cookie
+func getEncCookie(raw string) (ec EncCookie, err error){
+	var q EncCookie
 	// First decode url safe message to url unsafe/original message
 	url_unsafe, err := url.QueryUnescape(raw)
 
@@ -35,12 +35,12 @@ func get_enc_cookie(raw string) (ec enc_cookie, err error){
 	if err != nil{return q, err}
 	auth_tag_before := stuff[2]
 	auth_tag := []byte(auth_tag_before)
-	return enc_cookie{body: body, iv: iv, auth_tag: auth_tag }, nil
+	return EncCookie{body: body, iv: iv, auth_tag: auth_tag }, nil
 }
 
-func verify(cookie enc_cookie) {}
+func verify(cookie EncCookie) {}
 
-func decrypt(cookie enc_cookie) {}
+func decrypt(cookie EncCookie) {}
 
 func checkCookieValid(cookie *http.Cookie) (err error){
 	return nil
@@ -49,7 +49,7 @@ func checkCookieValid(cookie *http.Cookie) (err error){
 func DecryptAndVerify(cookie *http.Cookie, secret_key_base []byte) {
 	err := checkCookieValid(cookie)
 	if err != nil {return}
-	message, err := get_enc_cookie(cookie.Value)
+	message, err := getEncCookie(cookie.Value)
 	if err != nil {return}
 	secret := p.Key(secret_key_base, []byte(salt), 1000, 32, sha1.New) 
 	ctx, err := openssl.NewGCMDecryptionCipherCtx(len(secret)*8, nil, secret, message.iv)
